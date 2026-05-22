@@ -1,19 +1,22 @@
-"""Structured logging helper."""
 import logging
+import sys
 
 
-def get_logger(name: str = __name__) -> logging.Logger:
-    """Return a configured logger for simple console output."""
+def get_logger(name: str) -> logging.Logger:
+    """
+    Returns a consistently formatted logger.
+    Use: logger = get_logger(__name__)
+    """
     logger = logging.getLogger(name)
+
     if not logger.handlers:
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter("%(asctime)s %(levelname)s [%(name)s] %(message)s")
+        handler = logging.StreamHandler(sys.stdout)
+        formatter = logging.Formatter(
+            fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
         handler.setFormatter(formatter)
         logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
+        logger.setLevel(logging.INFO)
+
     return logger
-
-
-if __name__ == "__main__":
-    log = get_logger("diabetes")
-    log.info("Logger works")
