@@ -1,10 +1,103 @@
-seed: 42
-test_size: 0.2
-model:
-  type: logistic_regression
-  params:
-    max_iter: 1000
+project:
+  name: diabetes-readmission-service
+  version: "1.0.0"
+  random_seed: 42
+
 paths:
-  raw_data: data/raw/diabetes.csv
-  processed_data: data/processed/diabetes_processed.csv
-  model_output: models/model.joblib
+  raw_data: data/raw/diabetic_data.csv
+  processed_data: data/processed/diabetic_processed.csv
+  model_dir: models/
+  artifact_dir: models/v1/
+
+data:
+  target_column: readmitted
+  positive_label: "<30"          # readmitted within 30 days = positive class
+  test_size: 0.2
+  val_size: 0.1
+
+  # Columns to drop entirely
+  drop_columns:
+    - encounter_id
+    - patient_nbr
+    - weight                     # ~97% missing
+    - payer_code                 # ~40% missing, not clinically useful
+    - medical_specialty          # ~50% missing
+
+  # Sensitive/demographic columns — kept but flagged
+  sensitive_columns:
+    - race
+    - gender
+    - age
+
+  # Categorical columns to encode
+  categorical_columns:
+    - race
+    - gender
+    - age
+    - admission_type_id
+    - discharge_disposition_id
+    - admission_source_id
+    - diag_1
+    - diag_2
+    - diag_3
+    - max_glu_serum
+    - A1Cresult
+    - metformin
+    - repaglinide
+    - nateglinide
+    - chlorpropamide
+    - glimepiride
+    - acetohexamide
+    - glipizide
+    - glyburide
+    - tolbutamide
+    - pioglitazone
+    - rosiglitazone
+    - acarbose
+    - miglitol
+    - troglitazone
+    - tolazamide
+    - examide
+    - citoglipton
+    - insulin
+    - glyburide-metformin
+    - glipizide-metformin
+    - glimepiride-pioglitazone
+    - metformin-rosiglitazone
+    - metformin-pioglitazone
+    - change
+    - diabetesMed
+
+  # Numeric columns
+  numeric_columns:
+    - time_in_hospital
+    - num_lab_procedures
+    - num_procedures
+    - num_medications
+    - number_outpatient
+    - number_emergency
+    - number_inpatient
+    - number_diagnoses
+
+model:
+  type: lightgbm
+  params:
+    n_estimators: 300
+    learning_rate: 0.05
+    max_depth: 6
+    num_leaves: 31
+    min_child_samples: 20
+    subsample: 0.8
+    colsample_bytree: 0.8
+    class_weight: balanced      # handles class imbalance
+    random_state: 42
+    n_jobs: -1
+
+mlflow:
+  experiment_name: diabetes-readmission
+  tracking_uri: mlruns/
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  model_artifact_path: models/v1/
